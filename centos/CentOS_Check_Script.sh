@@ -21,7 +21,11 @@ echo "##########################################################################
 echo " "
 echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>系统基本信息<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 hostname=$(uname -n)
+if [ -f /etc/os-release ]; then
 system=$(cat /etc/os-release | grep "^NAME" | awk -F\" '{print $2}')
+else
+system=$(cat /etc/centos-release)
+fi
 version=$(cat /etc/redhat-release | awk '{print $4$5}')
 kernel=$(uname -r)
 platform=$(uname -p)
@@ -58,7 +62,7 @@ echo "=============================dividing line================================
 echo "内存状态:"
 vmstat 2 5
 echo "=============================dividing line================================"
-echo "僵尸进程:"
+echo "僵尸进程:进程结束还在进程表中"
 ps -ef | grep zombie | grep -v grep
 if [ $? == 1 ];then
     echo ">>>无僵尸进程"
@@ -101,15 +105,15 @@ echo  "当前用户的计划任务:"
 crontab -l
 echo " "
 echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>身份鉴别安全<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-grep -i "^password.*requisite.*pam_cracklib.so" /etc/pam.d/system-auth  > /dev/null
-if [ $? == 0 ];then
-    echo ">>>密码复杂度:已设置"
+password1=$(grep -i "^password.*requisite.*pam_cracklib.so" /etc/pam.d/system-auth)
+if [ -n "$password1" ];then
+    echo ">>>密码复杂度:pam_cracklib.so已设置:$password1"
 else
-    grep -i "pam_pwquality\.so" /etc/pam.d/system-auth > /dev/null
-    if [ $? == 0 ];then
-	echo ">>>密码复杂度:已设置"
+    password2=$(grep -i "pam_pwquality\.so" /etc/pam.d/system-auth)
+    if [-n  "$password2" ];then
+        echo ">>>密码复杂度:pam_pwquality\.so已设置:$password2"
     else
-	echo ">>>密码复杂度:未设置,请加固密码--------[需调整]"
+        echo ">>>密码复杂度:未设置,请加固密码--------[需调整]"
     fi
 fi
 echo "=============================dividing line================================"
